@@ -238,7 +238,7 @@ class cascaded_autoencoder(object):
     
     def _make_model(self):
         input_X = tf.keras.Input(shape=(self.LEN_TIME_WINDOW,79,))
-        p_out = TransformerEncoder(num_layers=3, d_model=64, num_heads=4, d_input=79, dff=256, rate=0.1)(input_X)
+        p_out, _ = TransformerEncoder(num_layers=3, d_model=64, num_heads=4, d_input=79, dff=256, rate=0.1)(input_X)
 
         cascaded_autoencoder = tf.keras.Model(input_X, p_out, name='cascaded_autoencoder')
         return cascaded_autoencoder      
