@@ -12,9 +12,10 @@ import datetime
 import pickle
 import matplotlib.pyplot as plt
 import plot as p
+from submission_csv import save_sub, read_sub
 
 if __name__ == '__main__':
-    DATA_DIR = r'../dataset' # path to data directory
+    DATA_DIR = r'./dataset' # path to data directory
     # TRAIN_LOG_DIR = './logs/train/' + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     # MODEL_DIR = r'./model/' # path to model save directory
     
@@ -25,37 +26,40 @@ if __name__ == '__main__':
     ae_lr = 1e-5 # Aeutoencoder learning rate
     disc_lr = 1e-5 # Discriminator learning rate
     
+    is_train = 0
+    
     # prepare train dataset
-    train_data, _ = load_data(DATA_DIR, LEN_TIME_WINDOW, BATCH_SIZE, is_train=True) 
+    train_data = load_data(DATA_DIR, LEN_TIME_WINDOW, BATCH_SIZE, is_train=0) 
     
     # make a model
     m = model.cascaded_autoencoder(LEN_TIME_WINDOW, BATCH_SIZE)
     
     # train the model
-    # m.train(train_data, N_EPOCH, ae_lr, disc_lr)
-    # m.save() # save the model weights
-    # del train_data
+    m.train(train_data, N_EPOCH, ae_lr, disc_lr)
+    m.save() # save the model weights
+    del train_data
     
     # Performance Evaluation
     m.restore() # restore the lastest model weights
-    test_data, test_label, timestamp = load_data(DATA_DIR, LEN_TIME_WINDOW, BATCH_SIZE*2, is_train=False) 
+    valid_data, valid_label, timestamp = load_data(DATA_DIR, LEN_TIME_WINDOW, BATCH_SIZE*2, is_train=2) 
     # y_pred_disc, y_pred_ae, y_true = pickle.load(open('./tr3_-mevaluate.pkl', 'rb'))
     
-    
-    y_pred_disc, y_pred_ae, y_pred_sub, y_true = m.evaluate(test_data, test_label)    
-    pickle.dump([y_pred_disc, y_pred_ae, y_pred_sub, y_true], open('./test1.pkl', 'wb'))
-       
+    _ , y_pred_ae, y_true = m.evaluate(valid_data, valid_label)     # prediction으로 바꾸기
+    # pickle.dump([y_pred_disc, y_pred_ae, y_pred_sub, y_true], open('./test1.pkl', 'wb'))
+    #evaluate 함수 안에서 prediction 호출하면 predict 값이 나올꺼고 그걸 다시 p.result를 호출하여 결과가 나오게/// evaluate 호출하면 prediction 하고 result 실행   
     
     # y_pred_disc, y_pred_ae, y_pred_sub, y_true = pickle.load(open('./test1.pkl', 'rb'))
     
-    
     th_ae = 2e-4
-    th_disc = 0.92
-    th_sub = [3e-4, 5e-6, 6e-6, 3e-5]
     
-    ylim_ae = (1e-5, 5e-4)
-    ylim_disc = (0.001, 1)
+    ylim_ae = (0.000001, 1)
     
     # 대충 멋진 결과 리포트 출력
-    p.result(timestamp, y_pred_disc, y_pred_ae, y_pred_sub, y_true, th_ae, th_sub, th_disc, ylim_ae, ylim_disc)
+    p.result(timestamp, y_pred_ae, y_true, th_ae, ylim_ae)
     
+    # test_data = load_data(DATA_DIR, LEN_TIME_WINDOW, BATCH_SIZE*2, is_train=1)
+     
+    # _ , y_pred_ae = m.evaluate(test_data)
+    
+    # data = read_sub()
+    # save_sub(data, y_pred_ae)
