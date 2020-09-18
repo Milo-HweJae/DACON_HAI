@@ -29,12 +29,12 @@ def preprocessing(data):
 
 def split_target(data, is_train=0):
     # label = data[:, 79:]
-    data = data[:, :79]
     if is_train == 2:
         label = data[:, 79:]
+        # label = data.drop([:, :79])
     else:
         label = []
-    
+    data = data[:, :79]
     return data, label
 
 @tf.autograph.experimental.do_not_convert
@@ -59,7 +59,8 @@ def load_data(DATA_DIR, window_len, batch_size=64, is_train=0):
     ds_label =[]
     
     for data in raw_data:
-        data, label = split_target(data)
+        
+        data, label = split_target(data, is_train)
         data = tf.data.Dataset.from_tensor_slices(data)
         
         if is_train == 2:
@@ -85,7 +86,7 @@ def load_data(DATA_DIR, window_len, batch_size=64, is_train=0):
         ds_data = ds_data_tmp[0]
         ds_data = ds_data.cache()
     else:
-        for sample_data, sample_label in ds_data, ds_label: #  
+        for sample_data, sample_label in zip(ds_data, ds_label): #  
             window_data = sample_data.window(window_len, shift=1, stride=1, drop_remainder=True)     # False:550800|448200 / True:550501|447901
             window_label = sample_label.window(window_len, shift=1, stride=1, drop_remainder=True)
         
@@ -109,4 +110,4 @@ def load_data(DATA_DIR, window_len, batch_size=64, is_train=0):
     else: # test dataset (no shuffle)
         batch_data = ds_data.batch(BATCH_SIZE)
         batch_label = ds_label.batch(BATCH_SIZE)
-        return batch_data, timestamp, batch_label 
+        return batch_data, batch_label, timestamp 

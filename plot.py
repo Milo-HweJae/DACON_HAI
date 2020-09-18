@@ -76,33 +76,33 @@ def make_plotly(y_pred_disc, y_pred_ae, y_true,th_ae,th_disc):
     # f1.close()
     # f2.close()
     
-def plot_save(timestamp, y_pred_ae, y_true, th_ae, ylim_ae):
+def plot_save(timestamp, y_pred_ae,y_pred_disc, y_true, th_ae, th_disc, ylim_ae, ylim_disc):
     import pickle
     import matplotlib.pyplot as plt
     # 공격 구간 별 탐지 결과 이미지 저장
     IMG_DIR = r'./imgs/'
-    atk_range = pickle.load(open('atk_range_2.pkl', 'rb'))
+    atk_range = pickle.load(open('atk_range.pkl', 'rb'))
     
     timestamp_ = []
     for item in timestamp:
         timestamp_.extend(item)
     # discriminator 결과 저장
-    # i = 1
-    # for start, end, next_start in atk_range:
-    #     if next_start - end >= 3000:
-    #         next_start = end + 3000
+    i = 1
+    for start, end, next_start in atk_range:
+        if next_start - end >= 3000:
+            next_start = end + 3000
         
-    #     plt.figure()
-    #     plt.plot(range(start-1500, next_start), y_pred_disc[start-1500:next_start], linewidth=0.5)
-    #     plt.axvline(x=start, color='r', linestyle='--', linewidth=0.5)
-    #     plt.axvline(x=end, color='r', linestyle='--', linewidth=0.5)
-    #     plt.axhline(y=th_disc, color='k', linestyle='--', linewidth=0.5)
-    #     plt.ylim(ylim_disc)
-    #     plt.xticks([start-1500,start,end, next_start],[timestamp_[start-1500][:-6],timestamp_[start][:-6],timestamp_[end][:-6],timestamp_[next_start][:-6]],rotation=30,fontsize=4)
-    #     plt.title('Discriminator, Attack{}'.format(i))
-    #     plt.savefig('./imgs/attack/disc/attack{}.png'.format(i), dpi=300)
-    #     plt.close()
-    #     i += 1
+        plt.figure()
+        plt.plot(range(start-1500, next_start), y_pred_disc[start-1500:next_start], linewidth=0.5)
+        plt.axvline(x=start, color='r', linestyle='--', linewidth=0.5)
+        plt.axvline(x=end, color='r', linestyle='--', linewidth=0.5)
+        plt.axhline(y=th_disc, color='k', linestyle='--', linewidth=0.5)
+        plt.ylim(ylim_disc)
+        plt.xticks([start-1500,start,end, next_start],[timestamp_[start-1500],timestamp_[start],timestamp_[end],timestamp_[next_start]],rotation=30,fontsize=4)
+        plt.title('Discriminator, Attack{}'.format(i))
+        plt.savefig('./imgs/attack/disc/attack{}.png'.format(i), dpi=300)
+        plt.close()
+        i += 1
     # autoencoder 결과 저장
     i = 1
     for start, end, next_start in atk_range:
@@ -114,7 +114,7 @@ def plot_save(timestamp, y_pred_ae, y_true, th_ae, ylim_ae):
         plt.axvline(x=end, color='r', linestyle='--', linewidth=0.5)
         plt.yscale('log')
         plt.ylim(ylim_ae)
-        plt.xticks([start-1500,start,end, next_start],[timestamp_[start-1500][:-6],timestamp_[start][:-6],timestamp_[end][:-6],timestamp_[next_start][:-6]],rotation=30,fontsize=4)
+        plt.xticks([start-1500,start,end, next_start],[timestamp_[start-1500],timestamp_[start],timestamp_[end],timestamp_[next_start]],rotation=30,fontsize=4)
         plt.axhline(y=th_ae, color='k', linestyle='--', linewidth=0.5)
         plt.title('AE, Attack{}'.format(i))
         # plt.savefig('./imgs/attack/ae/attack{}.png'.format(i), dpi=300)
@@ -135,7 +135,7 @@ def plot_save(timestamp, y_pred_ae, y_true, th_ae, ylim_ae):
     #     plt.axvline(x=end, color='r', linestyle='--', linewidth=0.5)
     #     plt.axhline(y=th_disc, color='r', linestyle='--', linewidth=0.5)
     #     plt.ylim(ylim_disc)
-    #     plt.xticks([start-1500,start,end, next_start],[timestamp_[start-1500][:-6],timestamp_[start][:-6],timestamp_[end][:-6],timestamp_[next_start][:-6]],rotation=30,fontsize=4)
+    #     plt.xticks([start-1500,start,end, next_start],[timestamp_[start-1500],timestamp_[start],timestamp_[end],timestamp_[next_start]],rotation=30,fontsize=4)
     #     plt.title('Discriminator')
     #     plt.subplot(121)
     #     plt.plot(range(start-1500, next_start), y_pred_ae[start-1500:next_start], linewidth=0.5)
@@ -143,7 +143,7 @@ def plot_save(timestamp, y_pred_ae, y_true, th_ae, ylim_ae):
     #     plt.axvline(x=end, color='r', linestyle='--', linewidth=0.5)
     #     plt.yscale('log')
     #     plt.ylim(ylim_ae)
-    #     plt.xticks([start-1500,start,end, next_start],[timestamp_[start-1500][:-6],timestamp_[start][:-6],timestamp_[end][:-6],timestamp_[next_start][:-6]],rotation=30,fontsize=4)
+    #     plt.xticks([start-1500,start,end, next_start],[timestamp_[start-1500],timestamp_[start],timestamp_[end],timestamp_[next_start]],rotation=30,fontsize=4)
     #     plt.axhline(y=th_ae, color='k', linestyle='--',linewidth=0.5)
     #     plt.title('AE')
     #     plt.suptitle('Attack{}'.format(i))
@@ -164,7 +164,7 @@ def plot_save(timestamp, y_pred_ae, y_true, th_ae, ylim_ae):
     #     plt.axvline(x=end, color='r', linestyle='--', linewidth=0.5)
     #     plt.axhline(y=th_sub[0], color='r', linestyle='--', linewidth=0.5)
     #     plt.ylim([ylim_ae[0], ylim_ae[1]])
-    #     plt.xticks([start-1500,start,end, next_start],[timestamp_[start-1500][:-6],timestamp_[start][:-6],timestamp_[end][:-6],timestamp_[next_start][:-6]],rotation=30,fontsize=4)
+    #     plt.xticks([start-1500,start,end, next_start],[timestamp_[start-1500],timestamp_[start],timestamp_[end],timestamp_[next_start]],rotation=30,fontsize=4)
     #     plt.title('Process 1')
         
     #     plt.subplot(222)
@@ -173,7 +173,7 @@ def plot_save(timestamp, y_pred_ae, y_true, th_ae, ylim_ae):
     #     plt.axvline(x=end, color='r', linestyle='--', linewidth=0.5)
     #     plt.axhline(y=th_sub[1], color='r', linestyle='--', linewidth=0.5)
     #     plt.ylim([1e-7, 1e-5])
-    #     plt.xticks([start-1500,start,end, next_start],[timestamp_[start-1500][:-6],timestamp_[start][:-6],timestamp_[end][:-6],timestamp_[next_start][:-6]],rotation=30,fontsize=4)
+    #     plt.xticks([start-1500,start,end, next_start],[timestamp_[start-1500],timestamp_[start],timestamp_[end],timestamp_[next_start]],rotation=30,fontsize=4)
     #     plt.title('Process 2')
         
         
@@ -183,7 +183,7 @@ def plot_save(timestamp, y_pred_ae, y_true, th_ae, ylim_ae):
     #     plt.axvline(x=end, color='r', linestyle='--', linewidth=0.5)
     #     plt.axhline(y=th_sub[2], color='r', linestyle='--', linewidth=0.5)
     #     plt.ylim([1e-7, 1e-5])
-    #     plt.xticks([start-1500,start,end, next_start],[timestamp_[start-1500][:-6],timestamp_[start][:-6],timestamp_[end][:-6],timestamp_[next_start][:-6]],rotation=30,fontsize=4)
+    #     plt.xticks([start-1500,start,end, next_start],[timestamp_[start-1500],timestamp_[start],timestamp_[end],timestamp_[next_start]],rotation=30,fontsize=4)
     #     plt.title('Process 3')
         
         
@@ -193,7 +193,7 @@ def plot_save(timestamp, y_pred_ae, y_true, th_ae, ylim_ae):
     #     plt.axvline(x=end, color='r', linestyle='--', linewidth=0.5)
     #     plt.axhline(y=th_sub[3], color='r', linestyle='--', linewidth=0.5)
     #     plt.ylim([1e-6, 6e-5])
-    #     plt.xticks([start-1500,start,end, next_start],[timestamp_[start-1500][:-6],timestamp_[start][:-6],timestamp_[end][:-6],timestamp_[next_start][:-6]],rotation=30,fontsize=4)
+    #     plt.xticks([start-1500,start,end, next_start],[timestamp_[start-1500],timestamp_[start],timestamp_[end],timestamp_[next_start]],rotation=30,fontsize=4)
     #     plt.title('Process 4')
         
         
@@ -210,20 +210,20 @@ def plot_save(timestamp, y_pred_ae, y_true, th_ae, ylim_ae):
         plt_end = start
         
         # Disc result
-        # plt.figure()
-        # plt.plot(range(plt_start, plt_end), y_pred_disc[plt_start:plt_end], linewidth=0.5)
-        # plt.ylim(ylim_disc)
-        # plt.xticks([plt_start,start,end,next_start],[timestamp_[plt_start][:-6],timestamp_[start][:-6],timestamp_[end][:-6],timestamp_[next_start][:-6]],rotation=30,fontsize=4)
-        # plt.axhline(y=th_disc, color='k', linewidth=1)
-        # plt.title('Discriminator, Normal{}-{}'.format(plt_start, plt_end))
-        # plt.savefig('./imgs/normal/disc/normal{}-{}.png'.format(plt_start, plt_end), dpi=300)
-        # plt.close()
+        plt.figure()
+        plt.plot(range(plt_start, plt_end), y_pred_disc[plt_start:plt_end], linewidth=0.5)
+        plt.ylim(ylim_disc)
+        plt.xticks([plt_start,start,end,next_start],[timestamp_[plt_start],timestamp_[start],timestamp_[end],timestamp_[next_start]],rotation=30,fontsize=4)
+        plt.axhline(y=th_disc, color='k', linewidth=1)
+        plt.title('Discriminator, Normal{}-{}'.format(plt_start, plt_end))
+        plt.savefig('./imgs/normal/disc/normal{}-{}.png'.format(plt_start, plt_end), dpi=300)
+        plt.close()
         
         # TR result
         plt.figure()
         plt.plot(range(plt_start, plt_end), y_pred_ae[plt_start:plt_end], linewidth=0.5)
         plt.ylim(ylim_ae)
-        plt.xticks([plt_start,start,end,next_start],[timestamp_[plt_start][:-6],timestamp_[start][:-6],timestamp_[end][:-6],timestamp_[next_start][:-6]],rotation=30,fontsize=4)
+        plt.xticks([plt_start,start,end,next_start],[timestamp_[plt_start],timestamp_[start],timestamp_[end],timestamp_[next_start]],rotation=30,fontsize=4)
         plt.axhline(y=th_ae, color='r', linewidth=1)
         plt.title('AE, Normal{}-{}'.format(plt_start, plt_end))
         plt.savefig('./imgs/normal/ae/normal{}-{}.png'.format(plt_start, plt_end), dpi=300)
@@ -242,14 +242,14 @@ def plot_save(timestamp, y_pred_ae, y_true, th_ae, ylim_ae):
     #     plt.subplot(122)
     #     plt.plot(range(plt_start, plt_end), y_pred_disc[plt_start:plt_end], linewidth=0.5)
     #     plt.ylim(ylim_disc)
-    #     plt.xticks([plt_start,plt_end],[timestamp_[plt_start][:-6],timestamp_[plt_end][:-6]],rotation=30,fontsize=4)
+    #     plt.xticks([plt_start,plt_end],[timestamp_[plt_start],timestamp_[plt_end]],rotation=30,fontsize=4)
     #     plt.axhline(y=th_disc, color='r', linewidth=1)
     #     plt.title('Discriminator')
         
     #     plt.subplot(121)
     #     plt.plot(range(plt_start, plt_end), y_pred_ae[plt_start:plt_end], linewidth=0.5)
     #     plt.ylim(ylim_ae)
-    #     plt.xticks([plt_start,plt_end],[timestamp_[plt_start][:-6],timestamp_[plt_end][:-6]],rotation=30,fontsize=4)
+    #     plt.xticks([plt_start,plt_end],[timestamp_[plt_start],timestamp_[plt_end]],rotation=30,fontsize=4)
     #     plt.axhline(y=th_ae, color='r', linewidth=1)
     #     plt.title('AE')
     #     plt.suptitle('Normal{}-{}'.format(plt_start, plt_end))
@@ -269,14 +269,14 @@ def plot_save(timestamp, y_pred_ae, y_true, th_ae, ylim_ae):
     #     plt.subplot(221)
     #     plt.plot(range(plt_start, plt_end), y_pred_sub[0][plt_start:plt_end], linewidth=0.5)
     #     plt.ylim([ylim_ae[0], ylim_ae[1]])
-    #     plt.xticks([plt_start,plt_end],[timestamp_[plt_start][:-6],timestamp_[plt_end][:-6]],rotation=30,fontsize=4)
+    #     plt.xticks([plt_start,plt_end],[timestamp_[plt_start],timestamp_[plt_end]],rotation=30,fontsize=4)
     #     plt.axhline(y=th_sub[0], color='r', linewidth=1)
     #     plt.title('Process 1')
         
     #     plt.subplot(222)
     #     plt.plot(range(plt_start, plt_end), y_pred_sub[1][plt_start:plt_end], linewidth=0.5)
     #     plt.ylim([1e-7, 1e-5])
-    #     plt.xticks([plt_start,plt_end],[timestamp_[plt_start][:-6],timestamp_[plt_end][:-6]],rotation=30,fontsize=4)
+    #     plt.xticks([plt_start,plt_end],[timestamp_[plt_start],timestamp_[plt_end]],rotation=30,fontsize=4)
     #     plt.axhline(y=th_sub[1], color='r', linewidth=1)
     #     plt.title('Process 2')
         
@@ -284,7 +284,7 @@ def plot_save(timestamp, y_pred_ae, y_true, th_ae, ylim_ae):
     #     plt.subplot(223)
     #     plt.plot(range(plt_start, plt_end), y_pred_sub[2][plt_start:plt_end], linewidth=0.5)
     #     plt.ylim([1e-7, 1e-5])
-    #     plt.xticks([plt_start,plt_end],[timestamp_[plt_start][:-6],timestamp_[plt_end][:-6]],rotation=30,fontsize=4)
+    #     plt.xticks([plt_start,plt_end],[timestamp_[plt_start],timestamp_[plt_end]],rotation=30,fontsize=4)
     #     plt.axhline(y=th_sub[2], color='r', linewidth=1)
     #     plt.title('Process 3')
         
@@ -292,7 +292,7 @@ def plot_save(timestamp, y_pred_ae, y_true, th_ae, ylim_ae):
     #     plt.subplot(224)
     #     plt.plot(range(plt_start, plt_end), y_pred_sub[3][plt_start:plt_end], linewidth=0.5)
     #     plt.ylim([1e-6, 6e-5])
-    #     plt.xticks([plt_start,plt_end],[timestamp_[plt_start][:-6],timestamp_[plt_end][:-6]],rotation=30,fontsize=4)
+    #     plt.xticks([plt_start,plt_end],[timestamp_[plt_start],timestamp_[plt_end]],rotation=30,fontsize=4)
     #     plt.axhline(y=th_sub[3], color='r', linewidth=1)
     #     plt.title('Process 4')
         
@@ -645,16 +645,16 @@ def tapr(y_pred_disc, y_pred_ae, y_pred_sub, y_true, th_ae, th_sub, th_disc):
     
     print()
     
-    # TaPR_disc = etapr.evaluate(anomalies=y_true_0, predictions=y_pred_disc)
-    # print(f"TaPR_disc_F1: {TaPR_disc['f1']:.3f} (TaPR_disc_TaP: {TaPR_disc['TaP']:.3f}, TaPR_disc_TaR: {TaPR_disc['TaR']:.3f})")
-    # print(f"# of detected anomalies: {len(TaPR_disc['Detected_Anomalies'])}")
-    # print(f"Detected anomalies: {TaPR_disc['Detected_Anomalies']}")
+    TaPR_disc = etapr.evaluate(anomalies=y_true_0, predictions=y_pred_disc)
+    print(f"TaPR_disc_F1: {TaPR_disc['f1']:.3f} (TaPR_disc_TaP: {TaPR_disc['TaP']:.3f}, TaPR_disc_TaR: {TaPR_disc['TaR']:.3f})")
+    print(f"# of detected anomalies: {len(TaPR_disc['Detected_Anomalies'])}")
+    print(f"Detected anomalies: {TaPR_disc['Detected_Anomalies']}")
     
-    # print('precision_disc :', precision_score(y_true_0, y_pred_disc))
-    # print('recall_disc :', recall_score(y_true_0, y_pred_disc))
-    # print('f1_score_disc :', f1_score(y_true_0, y_pred_disc))
+    print('precision_disc :', precision_score(y_true_0, y_pred_disc))
+    print('recall_disc :', recall_score(y_true_0, y_pred_disc))
+    print('f1_score_disc :', f1_score(y_true_0, y_pred_disc))
     
-    # print()
+    print()
     
     
     # TaPR = etapr.evaluate(anomalies=y_true_0, predictions=y_pred)
@@ -755,7 +755,7 @@ def tapr(y_pred_disc, y_pred_ae, y_pred_sub, y_true, th_ae, th_sub, th_disc):
     # print('f1_score_ae :', f1_score(y_true_0, y_pred_ae))
     # print('f1_score_disc :', f1_score(y_true_0, y_pred_disc))
 
-def result(timestamp, y_pred_ae, y_true, th_ae, ylim_ae):
+def result(timestamp, y_pred_ae, y_pred_disc, y_true, th_ae, th_disc, ylim_ae, ylim_disc):
     # eval_disc(y_pred_disc, y_true, threshold=th_disc)
     # eval_ae(y_pred_ae, y_true, threshold=th_ae)
     # eval_ae(y_pred_sub[0], y_true, threshold=th_ae)
@@ -763,6 +763,6 @@ def result(timestamp, y_pred_ae, y_true, th_ae, ylim_ae):
     # eval_ae(y_pred_sub[2], y_true, threshold=th_ae)
     # eval_ae(y_pred_sub[3], y_true, threshold=th_ae)
     
-    plot_save(timestamp, y_pred_ae, y_true, th_ae, ylim_ae)
+    plot_save(timestamp, y_pred_ae, y_pred_disc, y_true, th_ae, th_disc, ylim_ae, ylim_disc)
     # make_plotly(y_pred_disc, y_pred_ae, y_true,th_ae, th_disc)
     # tapr(y_pred_ae, y_true, th_ae)

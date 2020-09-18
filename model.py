@@ -247,11 +247,14 @@ class cascaded_autoencoder(object):
         
         loss_tr = tf.keras.losses.mean_squared_error(target, predictions)
         cross_entropy = BinaryCrossentropy(from_logits=False, label_smoothing=0.01)
-        loss_anti_disc = cross_entropy(tf.zeros_like(fake), fake)
+        if fake==None:
+            loss_anti_disc = None
+        else:
+            loss_anti_disc = cross_entropy(tf.zeros_like(fake), fake)
         
-        loss_total = 10 * loss_tr + loss_anti_disc
-        
-        return loss_total, loss_tr, loss_anti_disc
+        # loss_total = 10 * loss_tr + loss_anti_disc
+        loss_total = loss_tr 
+        return loss_total, loss_tr
 
     
     def  _calc_disc_loss(self, real, fake):
@@ -271,7 +274,7 @@ class cascaded_autoencoder(object):
             real_output = self.discriminator(target, training=True)
             fake_output = self.discriminator(output)
             
-            total_loss, tr_loss, anti_disc_loss = self._calc_loss(target, predictions, fake_output)
+            total_loss, tr_loss = self._calc_loss(target, predictions, fake_output)
             disc_loss = self._calc_disc_loss(real_output, fake_output)
             
         
@@ -281,7 +284,7 @@ class cascaded_autoencoder(object):
         self.tf_optimizer.apply_gradients(zip(tf_gradients, self.model.trainable_variables))
         self.disc_optimizer.apply_gradients(zip(disc_gradients, self.discriminator.trainable_variables))
         
-        train_losses = total_loss, disc_loss, tr_loss, anti_disc_loss
+        train_losses = total_loss, disc_loss, tr_loss
         return train_losses
         
     def train(self, train_data, n_epoch=10, ae_lr=1e-4, disc_lr=1e-3):
@@ -301,7 +304,7 @@ class cascaded_autoencoder(object):
             loss_total = Mean()
             loss_tr = Mean()
             loss_disc = Mean()
-            loss_anti_disc = Mean()
+            # loss_anti_disc = Mean()
             
             for step, batch in enumerate(train_data):
                 batch_x = tf.cast(batch, tf.float32)
@@ -309,34 +312,34 @@ class cascaded_autoencoder(object):
                 
                 # train one onestep
                 train_losses = self._train_step(batch_x)
-                total_loss, disc_loss, tr_loss, anti_disc_loss = train_losses
+                total_loss, disc_loss, tr_loss = train_losses
                 loss_total(total_loss)
                 loss_tr(tr_loss)
                 loss_disc(disc_loss)
-                loss_anti_disc(anti_disc_loss)
+                # loss_anti_disc(anti_disc_loss)
                 
                 # Log every 1000 steps
                 if global_step % 1000 == 0:       
                     template = 'Epoch {}, Step {}, collapse {} \n Total loss: {} \n '
-                    template += 'TR Loss {} \n Anti_disc_loss {} \n DISC loss: {} \n '
+                    template += 'TR Loss {} \n DISC loss: {} \n '
                     
                     tf.print(template.format(epoch+1, step,
                                           round(time.time()-start_time, 3),
                                           loss_total.result(),
                                           loss_tr.result(),
-                                          loss_anti_disc.result(),
+                                          # loss_anti_disc.result(),
                                           loss_disc.result(),
                                           output_stream=sys.stdout))
         
                     with train_summary_writer.as_default():
                         tf.summary.scalar('loss_Total', loss_total.result(), step=global_step)
                         tf.summary.scalar('loss_TR', loss_tr.result(), step=global_step)
-                        tf.summary.scalar('loss_Anti_DISC', loss_anti_disc.result(), step=global_step)
+                        # tf.summary.scalar('loss_Anti_DISC', loss_anti_disc.result(), step=global_step)
                         tf.summary.scalar('loss_DISC', loss_disc.result(), step=global_step)
                     # clear loss state
                     loss_total.reset_states()
                     loss_tr.reset_states()
-                    loss_anti_disc.reset_states()
+                    # loss_anti_disc.reset_states()
                     loss_disc.reset_states()
                     
                     # end of if global_step % 1000 == 0:
@@ -353,29 +356,54 @@ class cascaded_autoencoder(object):
         self.model.load_weights(self.MODEL_DIR + 'cas_ae/' + 'model.ckpt')
         self.discriminator.load_weights(self.MODEL_DIR + 'discriminator/' + 'model.ckpt')
                         
-    def evaluate(self, test_data, test_label):
+    # def evaluate(self, test_data, test_label):
+    #     y_pred_disc = np.empty(0)
+    #     y_pred_tr1 = np.empty(0)
+    #     y_true = np.empty(0)
+    #     tqdm.write('Generating predictions...')
+    #     for batch_x, batch_label in tqdm(zip(test_data, test_label)):
+    #         batch_x = tf.cast(batch_x, tf.float32)
+    #         # get prediction of discriminator
+    #         disc_prediction = self.discriminator(batch_x)
+    #         y_pred_disc = np.append(y_pred_disc, disc_prediction.numpy())
+            
+    #         # get prediction of autoencoder 
+    #         ae_prediction = self.model(batch_x) # [batch, win_len, cols]
+    #         total_loss, tr_loss= self._calc_loss(batch_x, ae_prediction)
+            
+    #         y_pred_tr1 = np.append(y_pred_tr1, tr_loss)
+    #         # get labels
+    #         batch_label = tf.cast(batch_label, tf.float32) # if one or more label in time_window is 1, label is 1
+    #         if len(y_true) == 0:
+    #             y_true = batch_label.numpy()
+    #         else:
+    #             y_true = np.vstack((y_true, batch_label.numpy()))
+        
+    #     # print(y_pred_disc)
+    #     return (y_pred_disc, y_pred_tr1, y_true)
+    
+    def evaluate(self, test_data):
         y_pred_disc = np.empty(0)
         y_pred_tr1 = np.empty(0)
-        y_true = np.empty(0)
+        # y_true = np.empty(0)
         tqdm.write('Generating predictions...')
-        for batch_x, batch_label in tqdm(zip(test_data, test_label)):
+        for batch_x in tqdm(test_data):
             batch_x = tf.cast(batch_x, tf.float32)
             # get prediction of discriminator
-            disc_prediction = self.discriminator(batch_x, training=False)
+            disc_prediction = self.discriminator(batch_x)
             y_pred_disc = np.append(y_pred_disc, disc_prediction.numpy())
             
             # get prediction of autoencoder 
             ae_prediction = self.model(batch_x) # [batch, win_len, cols]
-            err = np.square(batch_x.numpy() - ae_prediction.numpy())
-            err = err.reshape([err.shape[0], -1]).mean(1)
-            y_pred_tr1 = np.append(y_pred_tr1, err)
+            total_loss, tr_loss= self._calc_loss(batch_x, ae_prediction)
             
+            y_pred_tr1 = np.append(y_pred_tr1, tr_loss)
             # get labels
-            batch_label = tf.reduce_max(batch_label, axis=1) # if one or more label in time_window is 1, label is 1
-            if len(y_true) == 0:
-                y_true = batch_label.numpy()
-            else:
-                y_true = np.vstack((y_true, batch_label.numpy()))
+            # batch_label = tf.cast(batch_label, tf.float32) # if one or more label in time_window is 1, label is 1
+            # if len(y_true) == 0:
+            #     y_true = batch_label.numpy()
+            # else:
+            #     y_true = np.vstack((y_true, batch_label.numpy()))
         
-        print(y_pred_disc)
-        return (y_pred_disc, y_pred_tr1, y_true)
+        # print(y_pred_disc)
+        return y_pred_disc, y_pred_tr1

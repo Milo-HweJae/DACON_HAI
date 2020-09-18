@@ -24,18 +24,20 @@ def read_sub():
     
     return data
 
-def save_sub(data, y_pred_ae):
+def save_sub(data, y_pred_ae, th_ae):
     f_ = open('./dataset/submission.csv','w',encoding='utf-8',newline='')
     wr = csv.writer(f_)
     wr.writerow(['time', 'attack'])
+    for i in range(len(y_pred_ae)):
+        if y_pred_ae[i] < th_ae:
+            y_pred_ae[i] = 0
+        else:
+            y_pred_ae[i] = 1
     for i in range(len(data)):
-        if i < 119:
-            wr.writerow([data[i][0],data[i][1]])
-            continue
         # if i >= len(y_pred_ae) + 238:
         #     wr.writerow([data[i][0],data[i][1]])
         #     continue
         # else:
-        wr.writerow([data[i][0], y_pred_ae[i-119]])
+        wr.writerow([data[i][0], y_pred_ae[i]])
     f_.close()
     
